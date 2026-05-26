@@ -1,0 +1,465 @@
+// rest-reference-template.rest — AutoREST Generator Reference Template
+// version: 1.0
+// Demonstrates every directive, field type, modifier, and virtual pattern the generator can produce.
+// Generated output MUST NOT contain comments (R-SX-004).
+// Entities: documents, users, reports, categories, audit_logs, listings, ai_chat, listing_reviews
+{
+  "#hostname": "https://api.example.com",
+  // #version reflects the API URL version segment (for example /v2), not info.version.
+  "#version": "v2",
+  "#description": "Reference example demonstrating all generator-produced features",
+  "#options": {
+    "authenticationmethod": {
+      "choices": "OAuth2,BearerToken",
+      "default": "OAuth2"
+    },
+    "tokenURI": "https://api.example.com/oauth/token",
+    "authURI": "https://api.example.com/oauth/authorize",
+    "scope": "read write admin"
+  },
+  "#http": [
+    {"#code": 200, "#action": "OK"},
+    {"#code": 201, "#action": "OK"},
+    {"#code": 204, "#action": "OK"},
+    {"#code": 400, "#action": "ZERO_ROWS", "#message": "{/error/message}"},
+    {"#code": 401, "#action": "REAUTHENTICATE"},
+    {"#code": 403, "#action": "FAIL", "#message": "{/error/message}"},
+    {"#code": 404, "#action": "FAIL", "#message": "{/error/message}"},
+    {"#code": 409, "#action": "FAIL", "#operation": "INSERT", "#match": "duplicate", "#message": "{/error/message}"},
+    {"#code": 429, "#action": "RETRY_AFTER"},
+    {"#code": 500, "#action": "RETRY_FIXED"},
+    {"#code": 503, "#action": "RETRY_AFTER"}
+  ],
+  "#components": {
+    "address": {
+      "street": "VarChar(128)",
+      "city": "VarChar(64)",
+      "state": "VarChar(32)",
+      "postal_code": "VarChar(16)",
+      "country": "VarChar(2)"
+    }
+  },
+  "documents": {
+    "#path": [
+      "IDENTITY /v2/documents/{id}",
+      "/v2/documents/search?query={query}&workspace_id={workspace_id} /documents",
+      "/v2/documents/search?query={query}&location={location} /documents",
+      "/v2/documents /documents"
+    ],
+    "#insert": "POST /v2/documents",
+    "#update": "PATCH /v2/documents/{id}",
+    "#delete": "DELETE /v2/documents/{id}",
+    "#pageSizeParameter": "limit",
+    "#rowOffsetParameter": "offset",
+    "#totalRowsElement": "total",
+    "#maximumPageSize": 100,
+    "id": "VarChar(64),#key",
+    "title": "VarChar(128),#notnull",
+    "slug": "VarChar(128),#notnull,#unique",
+    "body": "LongVarChar",
+    "description": "LongVarChar",
+    "summary": "LongVarChar",
+    "thumbnail_url": "VarChar(512)",
+    "source_url": "VarChar(512)",
+    "author_email": "VarChar(256)",
+    "author_id": "VarChar(64)",
+    "correlation_id": "VarChar(36)",
+    "status_code": "VarChar(32)",
+    "status": {
+      "#type": "VarChar(32)",
+      "#eq": "status"
+    },
+    "view_count": "Integer",
+    "like_count": "SmallInt",
+    "star_rating": "TinyInt",
+    "sequence_id": "BigInt",
+    "epoch_created": "BigInt",
+    "price": "Decimal(18,2)",
+    "tax_rate": "Decimal(8,4)",
+    "score": "Double",
+    "relevance": "Float",
+    "is_published": "Boolean",
+    "is_featured": "Boolean",
+    "expires_on": "Date",
+    "modified_at": "Timestamp(0)",
+    "created_at": "Timestamp(0),#readonly",
+    "updated_at": "Timestamp(0),#readonly",
+    "metadata": "JSON",
+    "extra_attributes": "JSON",
+    "thumbnail_binary": "LongVarBinary",
+    "hash_value": "VarBinary(32)",
+    "geo": {
+      "latitude": {
+        "#type": "Double",
+        "#eq": "latitude"
+      },
+      "longitude": {
+        "#type": "Double",
+        "#eq": "longitude"
+      },
+      "altitude": "Double"
+    },
+    "dimensions": {
+      "width": "Integer",
+      "height": "Integer",
+      "unit": "VarChar(8)"
+    },
+    "tags[]": "VarChar(64)",
+    "permissions[]": "VarChar(32)",
+    "scores[]": "Double",
+    "attachments<documents_attachments>[]": {
+      "id": "VarChar(64)",
+      "filename": "VarChar(256)",
+      "mime_type": "VarChar(128)",
+      "size_bytes": "BigInt",
+      "url": "VarChar(512)",
+      "is_primary": "Boolean",
+      "uploaded_at": "Timestamp(0)"
+    },
+    "sections<documents_sections>[]": {
+      "id": "VarChar(64)",
+      "title": "VarChar(128)",
+      "display_order": "Integer",
+      "items<documents_sections_items>[]": {
+        "id": "VarChar(64)",
+        "content": "LongVarChar",
+        "item_type": "VarChar(32)",
+        "sort_index": "Integer"
+      }
+    },
+    "shipping_address": {
+      "$ref": "#/components/address"
+    },
+    "query": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "query"
+    },
+    "location": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#eq": "location"
+    },
+    "author_name": {
+      "#type": "VarChar(128)",
+      "#virtual": true,
+      "#eq": "author_name"
+    },
+    "tag_ids": {
+      "#type": "VarChar(512)",
+      "#virtual": true,
+      "#in": "tag_ids"
+    },
+    "category_ids": {
+      "#type": "VarChar(512)",
+      "#virtual": true,
+      "#in": "category_ids"
+    },
+    "created_after": {
+      "#type": "Date",
+      "#virtual": true,
+      "#ge": "created_after"
+    },
+    "created_before": {
+      "#type": "Date",
+      "#virtual": true,
+      "#le": "created_before"
+    },
+    "min_score": {
+      "#type": "Double",
+      "#virtual": true,
+      "#gt": "min_score"
+    },
+    "max_score": {
+      "#type": "Double",
+      "#virtual": true,
+      "#lt": "max_score"
+    },
+    "search_text": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#contains": "search_text"
+    },
+    "settings_theme": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#eq": "settings.theme"
+    },
+    "settings_locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "settings.locale"
+    },
+    "request_trace_id": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#header": true,
+      "#eq": "X-Trace-Id"
+    },
+    "expand": {
+      "#type": "VarChar(128)",
+      "#virtual": true,
+      "#queryparameter": true,
+      "#eq": "expand"
+    },
+    "external_id": {
+      "#type": "VarChar(64),#key",
+      "#eq": "external_id"
+    }
+  },
+  "users": {
+    "#path": [
+      "IDENTITY /v2/users/{username} /user",
+      "/v2/users /users"
+    ],
+    "#insert": "/v2/users",
+    "#update": "PUT /v2/users/{username}",
+    "#delete": "/v2/users/{username}",
+    "#nextPageParameter": "page_token",
+    "#nextPageElement": "/meta/next_page_token",
+    "#hasMoreElement": "/meta/has_more",
+    "#pageSizeParameter": "per_page",
+    "#maximumPageSize": 50,
+    "#firstPageNumber": 0,
+    "id": "VarChar(64),#key",
+    "username": {
+      "#type": "VarChar(128)",
+      "#eq": "username"
+    },
+    "email": "VarChar(256),#notnull",
+    "display_name": "VarChar(128)",
+    "bio": "LongVarChar",
+    "avatar_url": "VarChar(512)",
+    "profile_url": "VarChar(512)",
+    "is_active": "Boolean",
+    "is_verified": "Boolean",
+    "role": "VarChar(32)",
+    "locale": "VarChar(16)",
+    "timezone": "VarChar(64)",
+    "created_at": "Timestamp(0),#readonly",
+    "updated_at": "Timestamp(0),#readonly",
+    "roles<user_roles>[]": {
+      "id": "VarChar(64)",
+      "name": "VarChar(64)",
+      "scope": "VarChar(32)",
+      "granted_at": "Timestamp(0)"
+    },
+    "role_filter": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#eq": "role"
+    },
+    "search": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#contains": "search"
+    },
+    "address": {
+      "street": "VarChar(128)",
+      "city": {
+        "#type": "VarChar(64)",
+        "#eq": "city"
+      },
+      "country": {
+        "#type": "VarChar(2)",
+        "#eq": "country"
+      },
+      "postal_code": "VarChar(16)"
+    }
+  },
+  "reports": {
+    "#path": [
+      "IDENTITY /v2/reports/{report_id}/runs/{run_id} /report",
+      "POST /v2/reports/generate"
+    ],
+    "#insert": "POST /v2/reports",
+    "#update": "PATCH /v2/reports/{report_id}/runs/{run_id}",
+    "#delete": "DELETE /v2/reports/{report_id}/runs/{run_id}",
+    "report_id": "VarChar(64),#key",
+    "run_id": "VarChar(64),#key",
+    "name": "VarChar(128)",
+    "status": "VarChar(32)",
+    "generated_at": "Timestamp(0),#readonly",
+    "download_url": "VarChar(512)",
+    "row_count": "Integer",
+    "size_bytes": "BigInt",
+    "error_message": "LongVarChar",
+    "report_type": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "report_type"
+    },
+    "date_from": {
+      "#type": "Date",
+      "#virtual": true,
+      "#mandatory": true,
+      "#ge": "date_from"
+    },
+    "date_to": {
+      "#type": "Date",
+      "#virtual": true,
+      "#mandatory": true,
+      "#le": "date_to"
+    },
+    "filter_workspace_id": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#eq": "filter.workspace_id"
+    }
+  },
+  "categories": {
+    "#path": [
+      "IDENTITY /v2/categories/{slug}",
+      "/v2/categories /categories"
+    ],
+    "#pageNumberParameter": "page",
+    "#pageSizeParameter": "per_page",
+    "#firstPageNumber": 1,
+    "#maximumPageSize": 200,
+    "#totalRowsElement": "total",
+    "slug": "VarChar(128),#key",
+    "name": "VarChar(128),#notnull",
+    "description": "LongVarChar",
+    "parent_slug": "VarChar(128)",
+    "display_order": "Integer",
+    "is_active": "Boolean",
+    "icon_url": "VarChar(512)",
+    "created_at": "Timestamp(0),#readonly",
+    "aliases[]": "VarChar(128)",
+    "tags[]": "VarChar(64)",
+    "contact_address": {
+      "$ref": "#/components/address"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale",
+      "#default": "en"
+    }
+  },
+  "audit_logs": {
+    "#path": [
+      "/v2/audit-logs /audit_logs"
+    ],
+    "#rowOffsetParameter": "offset",
+    "#pageSizeParameter": "limit",
+    "#hasMoreElement": "has_more",
+    "#maximumPageSize": 500,
+    "entry_id": "BigInt,#key",
+    "shard_key": "VarChar(16),#key",
+    "user_id": "VarChar(64)",
+    "event_type": "VarChar(64)",
+    "resource_id": "VarChar(64)",
+    "resource_type": "VarChar(64)",
+    "action": "VarChar(32)",
+    "result": "VarChar(16)",
+    "ip_address": "VarChar(45)",
+    "user_agent": "VarChar(512)",
+    "payload": "JSON",
+    "occurred_at": "Timestamp(0)",
+    "from_time": {
+      "#type": "Timestamp(0)",
+      "#virtual": true,
+      "#ge": "from_time"
+    },
+    "to_time": {
+      "#type": "Timestamp(0)",
+      "#virtual": true,
+      "#le": "to_time"
+    },
+    "event_types": {
+      "#type": "VarChar(512)",
+      "#virtual": true,
+      "#in": "event_types"
+    },
+    "user_filter": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#eq": "user_id"
+    },
+    "resource_filter": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#eq": "resource_id"
+    }
+  },
+  "listings": {
+    "#path": [
+      "IDENTITY /v2/listings/{listing_id_or_alias} /listing",
+      "/v2/listings?location={location} /listings",
+      "/v2/listings?zip_code={zip_code} /listings"
+    ],
+    "#pageSizeParameter": "limit",
+    "#rowOffsetParameter": "offset",
+    "#maximumPageSize": 50,
+    "id": "VarChar(64),#key",
+    "alias": "VarChar(128)",
+    "name": "VarChar(128),#notnull",
+    "text": "LongVarChar",
+    "rating": "TinyInt",
+    "price": "VarChar(8)",
+    "price_filter": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#in": "price"
+    },
+    "open_at": {
+      "#type": "BigInt",
+      "#virtual": true,
+      "#eq": "open_at"
+    },
+    "postal_code": "VarChar(16)",
+    "zip_code_filter": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "zip_code"
+    },
+    "listing_id_or_alias": {
+      "#type": "VarChar(128)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "listing_id_or_alias"
+    },
+    "location": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#eq": "location"
+    }
+  },
+  "ai_chat": {
+    "#path": [
+      "POST /ai/chat/v2"
+    ],
+    "chat_id": "VarChar(64),#key",
+    "response": "LongVarChar",
+    "query_text": {
+      "#type": "LongVarChar",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "query"
+    }
+  },
+  "listing_reviews": {
+    "#path": [
+      "/v2/listings/{listing_id}/reviews /reviews"
+    ],
+    "#pageSizeParameter": "limit",
+    "#rowOffsetParameter": "offset",
+    "#maximumPageSize": 50,
+    "#totalRowsElement": "total",
+    "id": "VarChar(64),#key",
+    "user_id": "VarChar(64)",
+    "user_name": "VarChar(128)",
+    "text": "LongVarChar",
+    "rating": "TinyInt",
+    "time_created": "Timestamp(0),#readonly",
+    "listing_id": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "listing_id"
+    }
+  }
+}

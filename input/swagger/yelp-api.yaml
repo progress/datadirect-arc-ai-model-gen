@@ -1,0 +1,1902 @@
+swagger: "2.0"
+info:
+  title: Yelp Fusion API
+  description: >
+    The Yelp Fusion API lets you connect with local businesses using Yelp's extensive data. Includes AI-powered
+    conversational search, business search, reviews, events, categories, and more. Requires a Yelp API key passed as a
+    Bearer token.
+  version: "3.0"
+  contact:
+    name: Yelp Developer Support
+    url: https://docs.developer.yelp.com
+  termsOfService: https://www.yelp.com/static?p=tos
+host: api.yelp.com
+basePath: /
+schemes:
+  - https
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    in: header
+    name: Authorization
+    description: "Yelp API key. Format: 'Bearer YOUR_API_KEY'"
+security:
+  - BearerAuth: []
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: AI
+    description: Yelp AI conversational search and chat
+  - name: Businesses
+    description: Search and retrieve business information
+  - name: Reviews
+    description: Access business reviews and highlights
+  - name: Events
+    description: Search and retrieve local events
+  - name: Categories
+    description: Browse Yelp business categories
+  - name: Autocomplete
+    description: Autocomplete suggestions for search
+paths:
+  /ai/chat/v2:
+    post:
+      tags:
+        - AI
+      summary: Yelp AI API (Search & Chat)
+      description: >
+        Brings conversational intelligence to your application, enabling users to ask natural language questions and
+        receive real-time, contextually relevant answers powered by Yelp's latest business data and reviews. Supports
+        multi-turn conversations, direct business queries, and conversational restaurant reservations.
+      operationId: aiChat
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - query
+            properties:
+              query:
+                type: string
+                maxLength: 1000
+                description: >
+                  Natural language text for querying Yelp-specific information (e.g. "Can you find a Thai restaurant
+                  near me?"). Plain text only.
+              chat_id:
+                type: string
+                description: >
+                  Uniquely identifies the current conversation session. Omit on the first request; use the returned
+                  chat_id on subsequent requests to continue the same conversation.
+              user_context:
+                type: object
+                description: >
+                  Optional location data to help the AI tailor results to the user's location. If omitted and a
+                  location-based query is made, the system may prompt the user to specify a location.
+                properties:
+                  latitude:
+                    type: number
+                    format: double
+                    description: Latitude of the user's current location.
+                  longitude:
+                    type: number
+                    format: double
+                    description: Longitude of the user's current location.
+                  locale:
+                    type: string
+                    description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+              request_context:
+                type: object
+                description: >
+                  Optional settings that control how the API processes the request, affecting response format and
+                  content generation behavior.
+                properties:
+                  skip_text_generation:
+                    type: boolean
+                    description: |
+                      When true, the API returns structured data without generating a natural language response text.
+      responses:
+        "200":
+          description: Successful response with AI-generated answer
+          schema:
+            $ref: "#/definitions/AIChatResponse"
+        "400":
+          description: Bad Request – message varies depending on failure scenario
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden – API key not authorized for this endpoint
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large – request length exceeded maximum allowed
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited – daily quota or queries-per-second limit exceeded
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/search:
+    get:
+      tags:
+        - Businesses
+      summary: Business Search
+      description: >
+        Returns up to 240 businesses based on the provided search criteria. Results include basic business information.
+        The API does not return businesses without any reviews.
+      operationId: searchBusinesses
+      parameters:
+        - name: location
+          in: query
+          type: string
+          minLength: 1
+          maxLength: 250
+          description: >
+            Required if latitude and longitude are not provided. Geographic area to search (e.g. "New York City", "NYC",
+            "350 5th Ave, New York, NY 10118"). Results may not be strictly within the specified location.
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: |
+            Required if location is not provided. Latitude of the search origin. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: |
+            Required if location is not provided. Longitude of the search origin. Must be paired with latitude.
+        - name: term
+          in: query
+          type: string
+          description: >
+            Search term, e.g. "food" or "restaurants". May also be a business name such as "Starbucks". Defaults to
+            searching across popular categories if omitted.
+        - name: radius
+          in: query
+          type: integer
+          minimum: 0
+          maximum: 40000
+          description: >
+            Suggested search radius in meters (max 40000 / ~25 miles). Actual radius may vary by area density. Returns
+            AREA_TOO_LARGE error if too large.
+        - name: categories
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          description: >
+            Comma-delimited category aliases to filter results (e.g. "bars,french"). Uses OR logic. Use the alias, not
+            the display name (e.g. "discgolf" not "Disc Golf").
+        - name: locale
+          in: query
+          type: string
+          description: |
+            Locale code in the format {language_code}_{country_code} (e.g. en_US). See the list of supported locales.
+        - name: price
+          in: query
+          type: array
+          items:
+            type: integer
+          collectionFormat: csv
+          description: >
+            Pricing levels to filter by: 1=$, 2=$$, 3=$$$, 4=$$$$. Comma-delimited (e.g. "1,2,3" returns $, $$, and $$$
+            businesses).
+        - name: open_now
+          in: query
+          type: boolean
+          description: |
+            When true, only returns businesses open at the time of the request. Cannot be used together with open_at.
+        - name: open_at
+          in: query
+          type: integer
+          description: >
+            Unix timestamp (in the search location's timezone). Returns businesses open at the given time. Cannot be
+            used together with open_now.
+        - name: attributes
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          description: >
+            Additional attribute filters. Examples: hot_and_new, request_a_quote, reservation, waitlist_reservation,
+            gender_neutral_restrooms, open_to_all, wheelchair_accessible. Premium filters also available with Places
+            Premium Plan.
+        - name: sort_by
+          in: query
+          type: string
+          enum:
+            - best_match
+            - rating
+            - review_count
+            - distance
+          default: best_match
+          description: |
+            Sort order suggestion. Note: rating sort uses a Bayesian-adjusted value accounting for number of ratings.
+        - name: device_platform
+          in: query
+          type: string
+          enum:
+            - android
+            - ios
+            - mobile-generic
+          description: Determines the platform used for the mobile_link field in responses.
+        - name: reservation_date
+          in: query
+          type: string
+          description: Reservation date filter in YYYY-MM-DD format.
+        - name: reservation_time
+          in: query
+          type: string
+          description: Reservation time filter in HH:MM format.
+        - name: reservation_covers
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Number of people for the reservation filter.
+        - name: matches_party_size_param
+          in: query
+          type: boolean
+          description: When true, filters out results without openings matching the reservation parameters.
+        - name: job_alias
+          in: query
+          type: string
+          description: >
+            Return only businesses that service this job type alias (e.g. "plumbing", "hvac-repair"). Acceptable aliases
+            from the Get Jobs endpoint.
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+          description: Number of results to return (max 50, default 20).
+        - name: offset
+          in: query
+          type: integer
+          minimum: 0
+          maximum: 240
+          description: >
+            Number of results to offset for pagination. The total results cap is 240, so offset + limit cannot
+            meaningfully exceed 240.
+      responses:
+        "200":
+          description: One or more businesses found
+          schema:
+            $ref: "#/definitions/BusinessSearchResponse"
+        "400":
+          description: Bad Request – message varies depending on failure scenario
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden – API key not authorized for this endpoint
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited – daily quota or queries-per-second limit exceeded
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/search/phone:
+    get:
+      tags:
+        - Businesses
+      summary: Phone Search
+      description: >
+        Returns a list of businesses based on a provided phone number. Multiple businesses may share the same phone
+        number (e.g. chain store 1-800 numbers). The API does not return businesses without any reviews.
+      operationId: phoneSearch
+      parameters:
+        - name: phone
+          in: query
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 32
+          description: |
+            Phone number of the business. Must start with + and include the country code (e.g. +14159083801).
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+      responses:
+        "200":
+          description: One or more businesses found
+          schema:
+            $ref: "#/definitions/BusinessSearchResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/matches:
+    get:
+      tags:
+        - Businesses
+      summary: Business Match
+      description: >
+        Matches business data from other sources against Yelp businesses based on precise business information (name and
+        address). Best used when you have exact address details. The API does not return businesses without any reviews.
+      operationId: businessMatch
+      parameters:
+        - name: name
+          in: query
+          type: string
+          required: true
+          maxLength: 64
+          description: |
+            The name of the business. Only digits, letters, spaces, and !#$%&+,./:?@' are allowed.
+        - name: address1
+          in: query
+          type: string
+          required: true
+          maxLength: 64
+          description: >
+            First line of the business's address. Only digits, letters, spaces, and '/#&,.: are allowed. An empty string
+            matches service businesses with no street address.
+        - name: address2
+          in: query
+          type: string
+          maxLength: 64
+          description: Second line of the business's address.
+        - name: address3
+          in: query
+          type: string
+          maxLength: 64
+          description: Third line of the business's address.
+        - name: city
+          in: query
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 64
+          description: The city of the business. Only digits, letters, spaces, and '.() are allowed.
+        - name: state
+          in: query
+          type: string
+          required: true
+          minLength: 1
+          maxLength: 3
+          description: ISO 3166-2 state code of the business.
+        - name: country
+          in: query
+          type: string
+          required: true
+          minLength: 2
+          maxLength: 2
+          description: ISO 3166-1 alpha-2 country code of the business.
+        - name: postal_code
+          in: query
+          type: string
+          maxLength: 12
+          description: Postal/Zip code of the business.
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Latitude hint to improve matching. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Longitude hint to improve matching. Must be paired with latitude.
+        - name: phone
+          in: query
+          type: string
+          minLength: 1
+          maxLength: 32
+          description: >
+            Phone number of the business. Submit as locally formatted digits only (e.g. 016703080) or internationally
+            formatted with leading + (e.g. +35316703080).
+        - name: yelp_business_id
+          in: query
+          type: string
+          minLength: 22
+          maxLength: 22
+          description: Unique 22-character Yelp identifier used as a hint when finding a matching business.
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+          description: Number of results to return (max 10, default 3).
+        - name: match_threshold
+          in: query
+          type: string
+          enum:
+            - none
+            - default
+            - strict
+          default: default
+          description: >
+            Match quality threshold. none=return all potential matches; default=return only very closely matching
+            businesses; strict=apply very strict match quality threshold.
+      responses:
+        "200":
+          description: One or more businesses found
+          schema:
+            type: object
+            required:
+              - businesses
+            properties:
+              businesses:
+                type: array
+                items:
+                  $ref: "#/definitions/BusinessSummary"
+              total:
+                type: integer
+                format: int32
+                description: Total number of matching businesses.
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/{business_id_or_alias}:
+    get:
+      tags:
+        - Businesses
+      summary: Business Details
+      description: >
+        Returns detailed business content for a given business ID or alias. Business IDs are obtained from
+        /v3/businesses/search, /v3/businesses/search/phone, /v3/transactions/{transaction_type}/search, or
+        /v3/autocomplete. The API does not return businesses without any reviews.
+      operationId: getBusinessDetails
+      parameters:
+        - name: business_id_or_alias
+          in: path
+          type: string
+          required: true
+          description: >
+            A unique identifier for a Yelp Business. Can be either a 22-character Yelp Business ID or a Yelp Business
+            Alias.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+        - name: device_platform
+          in: query
+          type: string
+          enum:
+            - android
+            - ios
+            - mobile-generic
+          description: Determines the platform for the mobile_link field in responses.
+      responses:
+        "200":
+          description: Business with the requested ID was returned
+          schema:
+            $ref: "#/definitions/BusinessDetails"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/transactions/{transaction_type}/search:
+    get:
+      tags:
+        - Businesses
+      summary: Food Delivery Search
+      description: >
+        Returns a list of businesses that support the specified transaction type. Currently only supports food delivery
+        in the US. The API does not return businesses without any reviews.
+      operationId: foodDeliverySearch
+      parameters:
+        - name: transaction_type
+          in: path
+          type: string
+          required: true
+          enum:
+            - delivery
+          default: delivery
+          description: |
+            Type of transaction supported by the business. Currently only "delivery" is supported.
+        - name: location
+          in: query
+          type: string
+          minLength: 1
+          maxLength: 250
+          description: >
+            Required if latitude and longitude are not provided. Geographic area string (e.g. "New York City", "350 5th
+            Ave, New York, NY 10118").
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Required if location is not provided. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Required if location is not provided. Must be paired with latitude.
+        - name: term
+          in: query
+          type: string
+          description: Search term (e.g. "food", "pizza"). Defaults to searching across popular categories.
+        - name: categories
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          description: Comma-delimited list of category aliases to filter results.
+        - name: price
+          in: query
+          type: array
+          items:
+            type: integer
+          collectionFormat: csv
+          description: "Pricing levels to filter by: 1=$, 2=$$, 3=$$$, 4=$$$$."
+      responses:
+        "200":
+          description: Transaction data for one or more businesses returned
+          schema:
+            $ref: "#/definitions/BusinessSearchResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/engagement:
+    get:
+      tags:
+        - Businesses
+      summary: Business Engagement Metrics
+      description: Returns engagement metrics for businesses.
+      operationId: getBusinessEngagement
+      parameters:
+        - name: business_ids
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          required: true
+          description: Comma-delimited list of Yelp business IDs to fetch engagement metrics for.
+      responses:
+        "200":
+          description: Engagement metrics returned for the requested businesses.
+          schema:
+            type: object
+            description: Engagement metrics response for one or more businesses.
+            properties:
+              businesses:
+                type: array
+                description: List of businesses and their engagement metrics.
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: Yelp business ID.
+                    engagement:
+                      type: object
+                      description: Engagement metrics for the business (e.g., views, clicks, calls).
+                      additionalProperties: true
+            additionalProperties: false
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/{business_id_or_alias}/service_offerings:
+    get:
+      tags:
+        - Businesses
+      summary: Business Service Offerings
+      description: Returns service offerings for a given business.
+      operationId: getServiceOfferings
+      parameters:
+        - name: business_id_or_alias
+          in: path
+          type: string
+          required: true
+          description: >
+            A unique identifier for a Yelp Business. Can be either a 22-character Yelp Business ID or a Yelp Business
+            Alias.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+      responses:
+        "200":
+          description: Service offerings for the requested business returned.
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/{business_id_or_alias}/review_highlights:
+    get:
+      tags:
+        - Reviews
+      summary: Review Highlights
+      description: Returns highlighted review snippets for a given business.
+      operationId: getReviewHighlights
+      parameters:
+        - name: business_id_or_alias
+          in: path
+          type: string
+          required: true
+          description: >
+            A unique identifier for a Yelp Business. Can be either a 22-character Yelp Business ID or a Yelp Business
+            Alias.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+      responses:
+        "200":
+          description: Review highlights for the requested business returned.
+          schema:
+            type: object
+            title: ReviewHighlightsResponse
+            properties:
+              business_id:
+                type: string
+                description: A unique identifier for the Yelp Business (ID or alias).
+              highlights:
+                type: array
+                description: A list of highlighted review snippets for the business.
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: The highlighted review snippet text.
+                    review_id:
+                      type: string
+                      description: The identifier of the review this snippet is derived from.
+                    language:
+                      type: string
+                      description: Locale code of the review snippet (e.g. en_US).
+                  required:
+                    - text
+            required:
+              - business_id
+              - highlights
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized – API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/businesses/{business_id_or_alias}/reviews:
+    get:
+      tags:
+        - Reviews
+      summary: Reviews
+      description: >
+        Returns up to three review excerpts for a given business ordered by Yelp's default sort order. The API does not
+        return businesses without any reviews. Business IDs are obtained from /v3/businesses/search,
+        /v3/businesses/search/phone, /v3/transactions/{transaction_type}/search, or /v3/autocomplete.
+      operationId: getReviews
+      parameters:
+        - name: business_id_or_alias
+          in: path
+          type: string
+          required: true
+          description: >
+            A unique identifier for a Yelp Business. Can be either a 22-character Yelp Business ID or a Yelp Business
+            Alias.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+        - name: sort_by
+          in: query
+          type: string
+          enum:
+            - yelp_sort
+          default: yelp_sort
+          description: Sort reviews by the specified order.
+      responses:
+        "200":
+          description: >-
+            Returns up to three review excerpts for the given business. Response includes `reviews` (array), `total`
+            (integer), and `possible_languages` (array of locale strings indicating available review languages).
+          schema:
+            $ref: "#/definitions/ReviewsResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/events:
+    get:
+      tags:
+        - Events
+      summary: Event Search
+      description: Returns events that match the provided search criteria.
+      operationId: searchEvents
+      parameters:
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+        - name: offset
+          in: query
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Offset the list of returned results by this amount.
+        - name: limit
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 3
+          description: Number of event results to return (max 50, default 3).
+        - name: sort_by
+          in: query
+          type: string
+          enum:
+            - asc
+            - desc
+          default: desc
+          description: Sort results in ascending or descending order.
+        - name: sort_on
+          in: query
+          type: string
+          enum:
+            - popularity
+            - time_start
+          default: popularity
+          description: Field to sort results on.
+        - name: start_date
+          in: query
+          type: integer
+          description: |
+            Unix timestamp. Returns only events that begin at or after the specified time.
+        - name: end_date
+          in: query
+          type: integer
+          description: |
+            Unix timestamp. Returns only events that end at or before the specified time.
+        - name: categories
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          description: List of category aliases to filter events.
+        - name: is_free
+          in: query
+          type: boolean
+          description: |
+            Filter by free events. When omitted, both free and paid events are returned.
+        - name: excluded_events
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          description: List of event IDs to exclude from results.
+        - name: location
+          in: query
+          type: string
+          minLength: 1
+          maxLength: 250
+          description: >
+            Required if latitude and longitude are not provided. Geographic area string (e.g. "New York City", "350 5th
+            Ave, New York, NY 10118").
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Required if location is not provided. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Required if location is not provided. Must be paired with latitude.
+        - name: radius
+          in: query
+          type: integer
+          minimum: 0
+          maximum: 40000
+          description: |
+            Search radius in meters (max 40000 / approx 25 miles). Returns AREA_TOO_LARGE error if too large.
+      responses:
+        "200":
+          description: One or more events found
+          schema:
+            $ref: "#/definitions/EventSearchResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/events/featured:
+    get:
+      tags:
+        - Events
+      summary: Featured Event
+      description: |
+        Returns the featured event for a given location. Featured events are chosen by Yelp's community managers.
+      operationId: getFeaturedEvent
+      parameters:
+        - name: location
+          in: query
+          type: string
+          minLength: 1
+          maxLength: 250
+          description: >
+            Required if latitude and longitude are not provided. Geographic area string (e.g. "New York City", "350 5th
+            Ave, New York, NY 10118").
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: Required if location is not provided. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: Required if location is not provided. Must be paired with latitude.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+      responses:
+        "200":
+          description: A featured event was returned
+          schema:
+            $ref: "#/definitions/Event"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/events/{event_id}:
+    get:
+      tags:
+        - Events
+      summary: Event Details
+      description: >
+        Returns detailed information about the Yelp event specified by its event ID. Event IDs can be obtained from
+        /v3/events or /v3/events/featured.
+      operationId: getEvent
+      parameters:
+        - name: event_id
+          in: path
+          type: string
+          required: true
+          description: The unique Yelp ID of the event.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+      responses:
+        "200":
+          description: An event with the requested ID was found
+          schema:
+            $ref: "#/definitions/Event"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/categories:
+    get:
+      tags:
+        - Categories
+      summary: All Categories
+      description: >
+        Returns all Yelp business categories across all locales by default. Include the locale parameter to filter to
+        only those categories available for a particular locale, and to localize the category names.
+      operationId: getAllCategories
+      parameters:
+        - name: locale
+          in: query
+          type: string
+          description: >
+            Locale code in the format {language_code}_{country_code} (e.g. en_US). Filters categories to those available
+            in the locale and translates category names. If omitted, all categories across all locales are returned with
+            English names.
+      responses:
+        "200":
+          description: One or more categories returned
+          schema:
+            $ref: "#/definitions/CategoriesResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/categories/{alias}:
+    get:
+      tags:
+        - Categories
+      summary: Category Details
+      description: >
+        Returns detailed information about the Yelp category specified by its alias. Category aliases can be found via
+        /v3/categories or the Yelp category list.
+      operationId: getCategoryDetails
+      parameters:
+        - name: alias
+          in: path
+          type: string
+          required: true
+          description: The category alias (e.g. discgolf, restaurants).
+        - name: locale
+          in: query
+          type: string
+          description: >
+            Locale code in the format {language_code}_{country_code} (e.g. en_US). Filters to categories available in
+            the locale and translates names. If omitted, all locales are returned with English names.
+      responses:
+        "200":
+          description: A category was returned
+          schema:
+            $ref: "#/definitions/Category"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+  /v3/autocomplete:
+    get:
+      tags:
+        - Autocomplete
+      summary: Autocomplete
+      description: >
+        Returns autocomplete suggestions for search keywords, businesses, and categories based on the provided input
+        text.
+      operationId: autocomplete
+      parameters:
+        - name: text
+          in: query
+          type: string
+          required: true
+          minLength: 1
+          description: Search text to generate autocomplete suggestions for.
+        - name: locale
+          in: query
+          type: string
+          description: Locale code in the format {language_code}_{country_code} (e.g. en_US).
+        - name: latitude
+          in: query
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          description: |
+            Latitude of the location to bias autocomplete results toward. Must be paired with longitude.
+        - name: longitude
+          in: query
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          description: |
+            Longitude of the location to bias autocomplete results toward. Must be paired with latitude.
+      responses:
+        "200":
+          description: Autocomplete data returned
+          schema:
+            $ref: "#/definitions/AutocompleteResponse"
+        "400":
+          description: Bad Request
+          schema:
+            $ref: "#/definitions/Error"
+        "401":
+          description: |
+            Unauthorized - API key expired or missing required scopes. Error codes: UNAUTHORIZED_API_KEY, TOKEN_INVALID
+          schema:
+            $ref: "#/definitions/Error"
+        "403":
+          description: Forbidden
+          schema:
+            $ref: "#/definitions/Error"
+        "404":
+          description: Resource Not Found
+          schema:
+            $ref: "#/definitions/Error"
+        "413":
+          description: Payload Too Large
+          schema:
+            $ref: "#/definitions/Error"
+        "429":
+          description: Rate Limited
+          schema:
+            $ref: "#/definitions/Error"
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: "#/definitions/Error"
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: "#/definitions/Error"
+definitions:
+  Error:
+    type: object
+    properties:
+      code:
+        type: string
+        description: A machine-readable error code string (e.g. VALIDATION_ERROR).
+      description:
+        type: string
+        description: A human-readable error description.
+  BusinessSummary:
+    type: object
+    description: Abbreviated business data returned in search results.
+    properties:
+      id:
+        type: string
+        description: Unique Yelp ID for this business.
+      alias:
+        type: string
+        description: |
+          Unique Yelp alias of this business. May contain unicode characters (e.g. yelp-san-francisco).
+      name:
+        type: string
+        description: Name of the business.
+      image_url:
+        type: string
+        description: URL of the business photo.
+      is_closed:
+        type: boolean
+        description: Whether the business has been permanently closed.
+      url:
+        type: string
+        description: URL for the business page on Yelp.
+      review_count:
+        type: integer
+        description: Number of reviews for this business.
+      categories:
+        type: array
+        description: Category names and alias pairs associated with this business.
+        items:
+          $ref: "#/definitions/Category"
+      rating:
+        type: number
+        format: double
+        minimum: 1
+        maximum: 5
+        description: Rating for this business (1–5 stars, in increments of 0.5).
+      coordinates:
+        $ref: "#/definitions/Coordinates"
+      transactions:
+        type: array
+        description: List of Yelp transactions that the business is registered for (e.g. delivery).
+        items:
+          type: string
+      price:
+        type: string
+        description: Price level from $ to $$$$.
+      location:
+        $ref: "#/definitions/Location"
+      phone:
+        type: string
+        description: Phone number of the business.
+      display_phone:
+        type: string
+        description: Phone number of the business formatted for display.
+      distance:
+        type: number
+        format: double
+        description: Distance in meters from the requested location.
+  BusinessDetails:
+    type: object
+    description: Full business data returned by the Business Details endpoint.
+    allOf:
+      - $ref: "#/definitions/BusinessSummary"
+    properties:
+      photos:
+        type: array
+        description: Up to three URLs of the business's photos.
+        items:
+          type: string
+      hours:
+        type: array
+        description: Opening hours of the business.
+        items:
+          $ref: "#/definitions/Hours"
+      is_claimed:
+        type: boolean
+        description: Whether the business owner has claimed the Yelp listing.
+      special_hours:
+        type: array
+        description: |
+          Out-of-the-ordinary hours for the business that apply on certain dates. Overrides hours for those dates.
+        items:
+          $ref: "#/definitions/SpecialHours"
+      messaging:
+        type: object
+        description: Messaging details for the business (if available).
+        properties:
+          url:
+            type: string
+            description: URL for messaging the business.
+          use_case_text:
+            type: string
+            description: Prompt text shown to the user (e.g. "Message the Business").
+      online_reservation:
+        type: object
+        description: Online reservation availability information for the business (if applicable).
+  Hours:
+    type: object
+    properties:
+      hours_type:
+        type: string
+        description: Type of the business hours (e.g. REGULAR).
+      open:
+        type: array
+        items:
+          $ref: "#/definitions/OpenPeriod"
+      is_open_now:
+        type: boolean
+        description: Whether the business is currently open.
+  OpenPeriod:
+    type: object
+    properties:
+      is_overnight:
+        type: boolean
+        description: Whether the business opens overnight (past midnight).
+      start:
+        type: string
+        description: Start time in 24h HHmm format (e.g. 0900).
+      end:
+        type: string
+        description: End time in 24h HHmm format (e.g. 2100).
+      day:
+        type: integer
+        minimum: 0
+        maximum: 6
+        description: "Day of the week: 0 = Monday, 6 = Sunday."
+  SpecialHours:
+    type: object
+    properties:
+      date:
+        type: string
+        description: Date for which these special hours apply (YYYY-MM-DD).
+      is_closed:
+        type: boolean
+        description: Whether the business is closed on this date.
+      start:
+        type: string
+        description: Start time in 24h HHmm format.
+      end:
+        type: string
+        description: End time in 24h HHmm format.
+      is_overnight:
+        type: boolean
+        description: Whether the hours span midnight.
+  Location:
+    type: object
+    properties:
+      address1:
+        type: string
+        description: Street address of the business.
+      address2:
+        type: string
+        description: Optional second address line.
+      address3:
+        type: string
+        description: Optional third address line.
+      city:
+        type: string
+        description: City of the business.
+      zip_code:
+        type: string
+        description: Zip or postal code of the business.
+      country:
+        type: string
+        description: ISO 3166-1 alpha-2 country code.
+      state:
+        type: string
+        description: ISO 3166-2 state or province code.
+      display_address:
+        type: array
+        description: Array of address lines formatted for display.
+        items:
+          type: string
+      formatted_address:
+        type: string
+        description: Full address formatted as a single string with newlines (e.g. "8 Cortlandt St\nNew York, NY 10007").
+  Coordinates:
+    type: object
+    properties:
+      latitude:
+        type: number
+        format: double
+        description: Latitude of the business location.
+      longitude:
+        type: number
+        format: double
+        description: Longitude of the business location.
+  Category:
+    type: object
+    properties:
+      alias:
+        type: string
+        description: Alias of a category (e.g. bars, french).
+      title:
+        type: string
+        description: Title of a category (e.g. Bars, French).
+      parent_aliases:
+        type: array
+        description: |
+          List of parent category aliases. Present in the detailed category response (/v3/categories/{alias}).
+        items:
+          type: string
+      country_whitelist:
+        type: array
+        description: Countries where this category is shown. Empty means all countries.
+        items:
+          type: string
+      country_blacklist:
+        type: array
+        description: Countries where this category is hidden.
+        items:
+          type: string
+  Review:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique Yelp ID for this review.
+      url:
+        type: string
+        description: URL of the review.
+      text:
+        type: string
+        description: Excerpt of the review (max 160 characters).
+      rating:
+        type: integer
+        minimum: 1
+        maximum: 5
+        description: Rating of the review (1–5 stars).
+      time_created:
+        type: string
+        description: Timestamp when the review was created (YYYY-MM-DD HH:mm:ss).
+      user:
+        $ref: "#/definitions/User"
+  User:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique Yelp ID of the reviewer.
+      profile_url:
+        type: string
+        description: URL of the reviewer's profile page.
+      image_url:
+        type: string
+        description: URL of the reviewer's profile photo.
+      name:
+        type: string
+        description: Reviewer's display name.
+  Event:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique Yelp ID of the event.
+      name:
+        type: string
+        description: Name of the event.
+      description:
+        type: string
+        description: Full description of the event.
+      is_free:
+        type: boolean
+        description: Whether the event is free.
+      cost:
+        type: number
+        format: double
+        description: Minimum cost to attend the event.
+      cost_max:
+        type: number
+        format: double
+        description: Maximum cost to attend the event.
+      business_id:
+        type: string
+        description: >
+          ID of the business associated with this event (if any). Can be used with
+          /v3/businesses/{business_id_or_alias}.
+      event_site_url:
+        type: string
+        description: URL of the event on the event's own site.
+      image_url:
+        type: string
+        description: URL of the event banner image.
+      tickets_url:
+        type: string
+        description: URL to purchase tickets for the event.
+      interested_count:
+        type: integer
+        description: Number of Yelp users interested in attending.
+      attending_count:
+        type: integer
+        description: Number of Yelp users who have marked as attending.
+      is_canceled:
+        type: boolean
+        description: Whether the event has been canceled.
+      is_official:
+        type: boolean
+        description: Whether the event is an official Yelp event.
+      latitude:
+        type: number
+        format: double
+        description: Latitude of the event location.
+      longitude:
+        type: number
+        format: double
+        description: Longitude of the event location.
+      location:
+        $ref: "#/definitions/Location"
+      category:
+        type: string
+        description: Category alias for the event.
+      time_start:
+        type: string
+        description: Start date/time of the event (ISO 8601).
+      time_end:
+        type: string
+        description: End date/time of the event (ISO 8601). Empty string if ongoing.
+  AutocompleteResponse:
+    type: object
+    description: Response returned by the /v3/autocomplete endpoint.
+    properties:
+      categories:
+        type: array
+        description: Autocomplete suggestions matching Yelp category aliases.
+        items:
+          type: object
+          properties:
+            alias:
+              type: string
+              description: Category alias.
+            title:
+              type: string
+              description: Localized category title.
+      businesses:
+        type: array
+        description: Business suggestions matching the input text.
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+              description: Unique Yelp business ID.
+            name:
+              type: string
+              description: Business name.
+      terms:
+        type: array
+        description: Generic search term suggestions.
+        items:
+          type: object
+          properties:
+            text:
+              type: string
+              description: Suggested search term string.
+  AIChatResponse:
+    type: object
+    description: Response returned by the POST /ai/chat/v2 endpoint.
+    properties:
+      chat_id:
+        type: string
+        description: >-
+          Unique conversation identifier. Pass this as `chat_id` in subsequent requests to continue the same
+          conversation.
+      response:
+        type: object
+        description: AI-generated answer to the user query.
+        properties:
+          text:
+            type: string
+            description: Natural language response text.
+          tags:
+            type: array
+            description: Inline entity annotations within the response text.
+            items:
+              type: object
+              properties:
+                tag_type:
+                  type: string
+                  description: Type of the tagged entity (e.g. business).
+                start:
+                  type: integer
+                  description: Start character index of the tag within `text`.
+                end:
+                  type: integer
+                  description: End character index of the tag within `text`.
+                meta:
+                  type: object
+                  description: Additional metadata about the tagged entity.
+      types:
+        type: array
+        description: Content category labels describing the nature of the response (e.g. ["businesses"]).
+        items:
+          type: string
+      entities:
+        type: array
+        description: Business or entity references cited in the AI response.
+        items:
+          type: object
+          properties:
+            businesses:
+              type: array
+              description: List of businesses referenced in this entity group.
+              items:
+                $ref: "#/definitions/BusinessSummary"
+  BusinessSearchResponse:
+    type: object
+    description: Response returned by business search and phone search endpoints.
+    properties:
+      businesses:
+        type: array
+        description: List of businesses matching the search criteria.
+        items:
+          $ref: "#/definitions/BusinessSummary"
+      total:
+        type: integer
+        description: Total number of businesses found (may exceed the returned count).
+      region:
+        type: object
+        description: Suggested map region for displaying the results.
+        properties:
+          center:
+            $ref: "#/definitions/Coordinates"
+  ReviewsResponse:
+    type: object
+    description: Response returned by the reviews endpoint.
+    properties:
+      reviews:
+        type: array
+        description: List of up to three review excerpts.
+        items:
+          $ref: "#/definitions/Review"
+      total:
+        type: integer
+        description: Total number of reviews for the business.
+      possible_languages:
+        type: array
+        description: List of locale codes for languages in which reviews are available.
+        items:
+          type: string
+  EventSearchResponse:
+    type: object
+    description: Response returned by the event search endpoint.
+    properties:
+      events:
+        type: array
+        description: List of events matching the search criteria.
+        items:
+          $ref: "#/definitions/Event"
+      total:
+        type: integer
+        description: Total number of events found.
+  CategoriesResponse:
+    type: object
+    description: Response returned by the all-categories endpoint.
+    properties:
+      categories:
+        type: array
+        description: List of Yelp categories.
+        items:
+          $ref: "#/definitions/Category"

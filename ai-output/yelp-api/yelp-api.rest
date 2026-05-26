@@ -1,0 +1,542 @@
+{
+  "#version": "v3",
+  "#hostname": "https://api.yelp.com",
+  "#description": "The Yelp Fusion API lets you connect with local businesses using Yelp's extensive data. Includes AI-powered conversational search, business search, reviews, events, categories, and more. Requires a Yelp API key passed as a Bearer token.",
+  "#options": {
+    "authenticationmethod": "BearerToken"
+  },
+  "#http": [
+    {"#code": 200, "#action": "OK"},
+    {"#code": 400, "#action": "ZERO_ROWS", "#message": "{/description}"},
+    {"#code": 401, "#action": "REAUTHENTICATE"},
+    {"#code": 403, "#action": "FAIL", "#message": "{/description}"},
+    {"#code": 404, "#action": "FAIL", "#message": "{/description}"},
+    {"#code": 413, "#action": "FAIL", "#message": "{/description}"},
+    {"#code": 429, "#action": "RETRY_AFTER"},
+    {"#code": 500, "#action": "RETRY_FIXED"},
+    {"#code": 503, "#action": "RETRY_AFTER"}
+  ],
+  "businesses": {
+    "#path": [
+      "IDENTITY /v3/businesses/{business_id_or_alias}",
+      "/v3/businesses/search?location={location_filter} /businesses",
+      "/v3/businesses/search?latitude={latitude}&longitude={longitude} /businesses",
+      "/v3/businesses/search/phone?phone={phone} /businesses",
+      "/v3/businesses/matches?name={name}&address1={address1}&city={city}&state={state}&country={country} /businesses",
+      "/v3/transactions/{transaction_type}/search?location={location_filter} /businesses",
+      "/v3/transactions/{transaction_type}/search?latitude={latitude}&longitude={longitude} /businesses"
+    ],
+    "#pageSizeParameter": "limit",
+    "#rowOffsetParameter": "offset",
+    "#totalRowsElement": "total",
+    "#maximumPageSize": 50,
+    "id": "VarChar(64),#key",
+    "alias": "VarChar(128)",
+    "name": {
+      "#type": "VarChar(128)",
+      "#eq": "name"
+    },
+    "image_url": "VarChar(512)",
+    "is_closed": "Boolean",
+    "url": "VarChar(512)",
+    "review_count": "Integer",
+    "categories<businesses_categories>[]": {
+      "alias": "VarChar(64)",
+      "title": "VarChar(128)",
+      "parent_aliases[]": "VarChar(64)",
+      "country_whitelist[]": "VarChar(2)",
+      "country_blacklist[]": "VarChar(2)"
+    },
+    "rating": "Double",
+    "coordinates": {
+      "latitude": "Double",
+      "longitude": "Double"
+    },
+    "transactions[]": "VarChar(64)",
+    "price": "VarChar(8)",
+    "location": {
+      "address1": { "#type": "VarChar(128)", "#eq": "address1" },
+      "address2": { "#type": "VarChar(128)", "#eq": "address2" },
+      "address3": { "#type": "VarChar(128)", "#eq": "address3" },
+      "city": { "#type": "VarChar(64)", "#eq": "city" },
+      "zip_code": "VarChar(16)",
+      "country": { "#type": "VarChar(2)", "#eq": "country" },
+      "state": { "#type": "VarChar(32)", "#eq": "state" },
+      "display_address[]": "VarChar(256)",
+      "formatted_address": "VarChar(512)"
+    },
+    "phone": {
+      "#type": "VarChar(32)",
+      "#eq": "phone"
+    },
+    "display_phone": "VarChar(32)",
+    "distance": "Double",
+    "photos[]": "VarChar(512)",
+    "hours<businesses_hours>[]": {
+      "hours_type": "VarChar(32)",
+      "is_open_now": "Boolean",
+      "open<businesses_hours_open>[]": {
+        "is_overnight": "Boolean",
+        "start": "VarChar(8)",
+        "end": "VarChar(8)",
+        "day": "TinyInt"
+      }
+    },
+    "is_claimed": "Boolean",
+    "special_hours<businesses_special_hours>[]": {
+      "date": "Date",
+      "is_closed": "Boolean",
+      "start": "VarChar(8)",
+      "end": "VarChar(8)",
+      "is_overnight": "Boolean"
+    },
+    "messaging": {
+      "url": "VarChar(512)",
+      "use_case_text": "VarChar(128)"
+    },
+    "online_reservation": "JSON",
+    "region": {
+      "center": {
+        "latitude": "Double",
+        "longitude": "Double"
+      }
+    },
+    "business_id_or_alias": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "business_id_or_alias"
+    },
+    "transaction_type": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#eq": "transaction_type",
+      "#default": "delivery"
+    },
+    "location_filter": {
+      "#type": "VarChar(250)",
+      "#virtual": true,
+      "#eq": "location"
+    },
+    "latitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "latitude"
+    },
+    "longitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "longitude"
+    },
+    "term": {
+      "#type": "VarChar(128)",
+      "#virtual": true,
+      "#eq": "term"
+    },
+    "radius": {
+      "#type": "Integer",
+      "#virtual": true,
+      "#eq": "radius"
+    },
+    "categories_filter": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#in": "categories"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    },
+    "price_filter": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#in": "price"
+    },
+    "open_now": {
+      "#type": "Boolean",
+      "#virtual": true,
+      "#eq": "open_now"
+    },
+    "open_at": {
+      "#type": "BigInt",
+      "#virtual": true,
+      "#eq": "open_at"
+    },
+    "attributes": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#in": "attributes"
+    },
+    "sort_by": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#eq": "sort_by",
+      "#default": "best_match"
+    },
+    "device_platform": {
+      "#type": "VarChar(32)",
+      "#virtual": true,
+      "#eq": "device_platform"
+    },
+    "reservation_date": {
+      "#type": "Date",
+      "#virtual": true,
+      "#eq": "reservation_date"
+    },
+    "reservation_time": {
+      "#type": "VarChar(8)",
+      "#virtual": true,
+      "#eq": "reservation_time"
+    },
+    "reservation_covers": {
+      "#type": "TinyInt",
+      "#virtual": true,
+      "#eq": "reservation_covers"
+    },
+    "matches_party_size_param": {
+      "#type": "Boolean",
+      "#virtual": true,
+      "#eq": "matches_party_size_param"
+    },
+    "job_alias": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#eq": "job_alias"
+    },
+    "postal_code": {
+      "#type": "VarChar(12)",
+      "#virtual": true,
+      "#eq": "postal_code"
+    },
+    "yelp_business_id": {
+      "#type": "VarChar(22)",
+      "#virtual": true,
+      "#eq": "yelp_business_id"
+    },
+    "match_threshold": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "match_threshold",
+      "#default": "default"
+    }
+  },
+  "reviews": {
+    "#path": ["/v3/businesses/{business_id_or_alias}/reviews /reviews"],
+    "id": "VarChar(64),#key",
+    "url": "VarChar(512)",
+    "text": "LongVarChar",
+    "rating": "TinyInt",
+    "time_created": "Timestamp(0)",
+    "user": {
+      "id": "VarChar(64)",
+      "profile_url": "VarChar(512)",
+      "image_url": "VarChar(512)",
+      "name": "VarChar(128)"
+    },
+    "total": "Integer",
+    "possible_languages[]": "VarChar(16)",
+    "business_id_or_alias": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "business_id_or_alias"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    },
+    "sort_by": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "sort_by",
+      "#default": "yelp_sort"
+    }
+  },
+  "review_highlights": {
+    "#path": ["IDENTITY /v3/businesses/{business_id_or_alias}/review_highlights"],
+    "business_id": "VarChar(64),#key",
+    "highlights<review_highlights_highlights>[]": {
+      "text": "LongVarChar",
+      "review_id": "VarChar(64)",
+      "language": "VarChar(16)"
+    },
+    "business_id_or_alias": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "business_id_or_alias"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    }
+  },
+  "events": {
+    "#path": [
+      "IDENTITY /v3/events/{event_id}",
+      "/v3/events /events",
+      "/v3/events/featured?location={location_filter}",
+      "/v3/events/featured?latitude={latitude}&longitude={longitude}"
+    ],
+    "#pageSizeParameter": "limit",
+    "#rowOffsetParameter": "offset",
+    "#totalRowsElement": "total",
+    "#maximumPageSize": 50,
+    "id": "VarChar(64),#key",
+    "name": "VarChar(256)",
+    "description": "LongVarChar",
+    "is_free": {
+      "#type": "Boolean",
+      "#eq": "is_free"
+    },
+    "cost": "Double",
+    "cost_max": "Double",
+    "business_id": "VarChar(64)",
+    "event_site_url": "VarChar(512)",
+    "image_url": "VarChar(512)",
+    "tickets_url": "VarChar(512)",
+    "interested_count": "Integer",
+    "attending_count": "Integer",
+    "is_canceled": "Boolean",
+    "is_official": "Boolean",
+    "latitude": {
+      "#type": "Double",
+      "#eq": "latitude"
+    },
+    "longitude": {
+      "#type": "Double",
+      "#eq": "longitude"
+    },
+    "location": {
+      "address1": "VarChar(128)",
+      "address2": "VarChar(128)",
+      "address3": "VarChar(128)",
+      "city": "VarChar(64)",
+      "zip_code": "VarChar(16)",
+      "country": "VarChar(2)",
+      "state": "VarChar(8)",
+      "display_address[]": "VarChar(256)",
+      "formatted_address": "VarChar(512)"
+    },
+    "category": "VarChar(64)",
+    "time_start": "Timestamp(0)",
+    "time_end": "Timestamp(0)",
+    "event_id": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "event_id"
+    },
+    "location_filter": {
+      "#type": "VarChar(250)",
+      "#virtual": true,
+      "#eq": "location"
+    },
+    "sort_by": {
+      "#type": "VarChar(8)",
+      "#virtual": true,
+      "#eq": "sort_by",
+      "#default": "desc"
+    },
+    "sort_on": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "sort_on",
+      "#default": "popularity"
+    },
+    "start_date": {
+      "#type": "BigInt",
+      "#virtual": true,
+      "#ge": "start_date"
+    },
+    "end_date": {
+      "#type": "BigInt",
+      "#virtual": true,
+      "#le": "end_date"
+    },
+    "categories": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#in": "categories"
+    },
+    "excluded_events": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#in": "excluded_events"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    },
+    "radius": {
+      "#type": "Integer",
+      "#virtual": true,
+      "#eq": "radius"
+    }
+  },
+  "categories": {
+    "#path": [
+      "IDENTITY /v3/categories/{alias}",
+      "/v3/categories /categories"
+    ],
+    "alias": {
+      "#type": "VarChar(64),#key",
+      "#eq": "alias"
+    },
+    "title": "VarChar(128)",
+    "parent_aliases[]": "VarChar(64)",
+    "country_whitelist[]": "VarChar(2)",
+    "country_blacklist[]": "VarChar(2)",
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    }
+  },
+  "autocomplete": {
+    "#path": ["/v3/autocomplete?text={text}"],
+    "ROWID": "VarChar(32)=rowid(),#key",
+    "categories<autocomplete_categories>[]": {
+      "alias": "VarChar(64)",
+      "title": "VarChar(128)"
+    },
+    "businesses<autocomplete_businesses>[]": {
+      "id": "VarChar(64)",
+      "name": "VarChar(128)"
+    },
+    "terms<autocomplete_terms>[]": {
+      "text": "LongVarChar"
+    },
+    "text": {
+      "#type": "VarChar(256)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#contains": "text"
+    },
+    "locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "locale"
+    },
+    "latitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "latitude"
+    },
+    "longitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "longitude"
+    }
+  },
+  "ai_chat": {
+    "#path": [
+      "POST /ai/chat/v2"
+    ],
+    "#insert": "POST /ai/chat/v2",
+    "chat_id": {
+      "#type": "VarChar(64),#key",
+      "#eq": "chat_id"
+    },
+    "response": {
+      "text": "LongVarChar",
+      "tags<ai_chat_response_tags>[]": {
+        "tag_type": "VarChar(64)",
+        "start": "Integer",
+        "end": "Integer",
+        "meta": "JSON"
+      }
+    },
+    "types[]": "VarChar(64)",
+    "entities<ai_chat_entities>[]": {
+      "businesses<ai_chat_entities_businesses>[]": {
+        "id": "VarChar(64)",
+        "alias": "VarChar(128)",
+        "name": "VarChar(128)",
+        "image_url": "VarChar(512)",
+        "is_closed": "Boolean",
+        "url": "VarChar(512)",
+        "review_count": "Integer",
+        "categories<ai_chat_entities_businesses_categories>[]": {
+          "alias": "VarChar(64)",
+          "title": "VarChar(128)",
+          "parent_aliases[]": "VarChar(32)",
+          "country_whitelist[]": "VarChar(2)",
+          "country_blacklist[]": "VarChar(2)"
+        },
+        "rating": "Double",
+        "coordinates": {
+          "latitude": "Double",
+          "longitude": "Double"
+        },
+        "transactions[]": "VarChar(64)",
+        "price": "VarChar(8)",
+        "location": {
+          "address1": "VarChar(128)",
+          "address2": "VarChar(128)",
+          "address3": "VarChar(128)",
+          "city": "VarChar(64)",
+          "zip_code": "VarChar(16)",
+          "country": "VarChar(2)",
+          "state": "VarChar(32)",
+          "display_address[]": "VarChar(256)",
+          "formatted_address": "VarChar(512)"
+        },
+        "phone": "VarChar(32)",
+        "display_phone": "VarChar(32)",
+        "distance": "Double"
+      }
+    },
+    "query": {
+      "#type": "VarChar(1000)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#contains": "query"
+    },
+    "user_context_latitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "user_context.latitude"
+    },
+    "user_context_longitude": {
+      "#type": "Double",
+      "#virtual": true,
+      "#eq": "user_context.longitude"
+    },
+    "user_context_locale": {
+      "#type": "VarChar(16)",
+      "#virtual": true,
+      "#eq": "user_context.locale"
+    },
+    "request_context_skip_text_generation": {
+      "#type": "Boolean",
+      "#virtual": true,
+      "#eq": "request_context.skip_text_generation"
+    }
+  },
+  "business_engagement": {
+    "#path": ["/v3/businesses/engagement?business_ids={business_ids} /businesses"],
+    "id": "VarChar(64),#key",
+    "engagement": "JSON",
+    "business_ids": {
+      "#type": "VarChar(512)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#in": "business_ids"
+    }
+  },
+  "service_offerings": {
+    "#path": ["IDENTITY /v3/businesses/{business_id_or_alias}/service_offerings"],
+    "data": "JSON",
+    "business_id_or_alias": {
+      "#type": "VarChar(64)",
+      "#virtual": true,
+      "#mandatory": true,
+      "#eq": "business_id_or_alias"
+    }
+  }
+}

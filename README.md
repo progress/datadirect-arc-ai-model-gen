@@ -47,15 +47,16 @@ This project delivers AI-assisted generation of DataDirect Autonomous REST Conne
 
 ## Quick Start
 
-1. Clone this repository and open the **`arc-genai-agents/`** folder as your workspace root in VS Code, or `cd` into it in the terminal. Agent and prompt paths (`.github/agents/...`, `.github/prompts/...`) resolve relative to this folder.
+1. Clone this repository and open the top level folder of the repository you cloned as your workspace root in VS Code, or `cd` into it in the terminal. Agent and prompt paths (`.github/agents/...`, `.github/prompts/...`) resolve relative to this folder.
 
 2. Add your Swagger/OpenAPI document to `input/swagger/`.
 
 3. **Generate the model:**
-
+   
    **VS Code:** Open Copilot Chat (agent mode), attach your Swagger/OpenAPI document to the chat context, then run `/ARCGenAI-Generator`.
-
+   
    **GitHub Copilot CLI:**
+   
    ```
    /ARCGenAI-Generator @input/swagger/MyAPI.yaml
    ```
@@ -63,19 +64,21 @@ This project delivers AI-assisted generation of DataDirect Autonomous REST Conne
 4. **Review output** in `ai-output/{name}/{name}-generation-status.md` and address all items in the `MANDATORY REVIEW BEFORE USE` section before continuing. See the [User workflow](#user-workflow) section for details.
 
 5. **Validate the model:**
-
+   
    **VS Code:** Attach the generated `.rest` file and source Swagger/OpenAPI document to the chat context, then run `/ARCGenAI-StaticValidator`.
-
+   
    **GitHub Copilot CLI:**
+   
    ```
    /ARCGenAI-StaticValidator @ai-output/MyAPI/MyAPI.rest @input/swagger/MyAPI.yaml
    ```
 
 6. **Launch in ARC Composer:**
-
+   
    **VS Code:** Attach the validated `.rest` file to the chat context and run `/ARCGenAI-Launcher`.
-
+   
    **GitHub Copilot CLI:**
+   
    ```
    /ARCGenAI-Launcher @ai-output/MyAPI/MyAPI.rest
    ```
@@ -153,13 +156,15 @@ These guardrails are especially relevant when processing third-party or external
 ### Required for the Launcher step only
 
 - **Java Runtime (JRE/JDK 8+)** -- the `java` executable must be on your system `PATH`. Verify with `java -version`.
-- **AutoREST JAR (`autorest.jar`)** -- part of a DataDirect AutoREST / Progress DataDirect JDBC install. Requires JDBC version 6.0.1.7232 or newer, or ODBC version 8.01.2290 or newer.
 
+- **AutoREST JAR (`autorest.jar`)** -- part of a DataDirect AutoREST / Progress DataDirect JDBC install. Requires JDBC version 6.0.1.7232 or newer, or ODBC version 8.01.2290 or newer.
+  
   The Launcher searches the following locations in order:
+  
   1. `tools/` in the workspace root (`arc-genai-agents/tools/autorest.jar`)
   2. `C:\Program Files\Progress\DataDirect\JDBC` (Windows default install path)
   3. `/opt/Progress/DataDirect/JDBC` (Linux/macOS default install path)
-
+  
   If the JAR is not in one of these locations, place it under `tools/` or supply its path when the Launcher asks.
 
 ---

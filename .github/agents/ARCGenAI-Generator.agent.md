@@ -400,9 +400,11 @@ The result is standard JSON formatting with the comma at the END of each propert
 
 ### Step 3.2 — Clean up temp files
 
-After successful assembly, delete temp files using the terminal with shell-native commands (do not assume PowerShell). Use retry logic to handle transient file locks.
+Delete the `*.entity.tmp` and `_header.assembly.tmp` files (and the now-empty `entities/` directory) under `ai-output/{fileName}/entities/`.
 
-`{fileName}` MUST already have been validated against the `^[A-Za-z0-9._-]+$` allowlist (see Security and Reliability Guardrails). Every expansion of `{fileName}` below is quoted — never remove the quotes, even though the value is pre-validated, so the commands stay safe if that invariant is ever broken.
+**Prefer your file-editing tool's native delete/remove capability over the terminal for this step.** Removing temp files is a plain file-system operation — it does not need a shell, and avoiding the shell entirely removes the command-injection surface described below. Only fall back to the terminal commands if your runtime's edit tool cannot delete files or directories.
+
+If you must use the terminal, use shell-native commands (do not assume PowerShell) with retry logic to handle transient file locks. `{fileName}` MUST already have been validated against the `^[A-Za-z0-9._-]+$` allowlist (see Security and Reliability Guardrails). Every expansion of `{fileName}` below is quoted — never remove the quotes, even though the value is pre-validated, so the commands stay safe if that invariant is ever broken.
 
 ```
 POSIX shell example:
@@ -426,7 +428,7 @@ for /L %%i in (1,1,3) do (
 :cleanup_done
 ```
 
-After running cleanup, verify no temp artifacts remain:
+After running cleanup, verify no temp artifacts remain. If you deleted via the file-editing tool, verify with a plain read/search for `ai-output/{fileName}/entities/` instead of the shell. If you used the terminal fallback, verify with the same shell:
 
 ```
 POSIX shell:

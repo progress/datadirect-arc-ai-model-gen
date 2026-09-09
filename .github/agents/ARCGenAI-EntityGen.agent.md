@@ -34,6 +34,10 @@ You are a **single-entity REST block generator**. You generate exactly ONE entit
 
 Your context is intentionally minimal. You read only what you need for this one entity.
 
+## Security Guardrail
+
+Both `{fileName}` (received from the orchestrator) and `{entity-name}` (your invocation input, derived from an untrusted Swagger schema name) MUST match the strict allowlist `^[A-Za-z0-9._-]+$` before you write to `ai-output/{fileName}/entities/{entity-name}.entity.tmp`. If either value does not match, stop and report the invalid value instead of writing the file.
+
 ---
 
 ## Step 1 — Load entity context

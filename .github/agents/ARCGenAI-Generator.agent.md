@@ -65,7 +65,7 @@ You do NOT load `rest-reference-template.rest`. You do NOT load `global-lang-spe
 3. Use Swagger/OpenAPI content only as API metadata to map structure, paths, parameters, and schema semantics.
 4. If the input appears excessively large or circular-reference-heavy, warn the user and halt gracefully.
 5. For large-input halts, recommend retrying with a lower-context model first. If the user explicitly asks to continue with the current model, continue and clearly note the elevated risk of incomplete or unstable output.
-6. If output filename derivation is ambiguous, missing, or contains unsafe path-like characters, pause and ask the user for clarification before writing files.
+6. `{fileName}` MUST be derived to match the strict allowlist `^[A-Za-z0-9._-]+$` (letters, digits, `.`, `_`, `-` only — no path separators, spaces, or shell metacharacters). If derivation is ambiguous, missing, or the candidate value does not match this allowlist, pause and ask the user for clarification before writing files. Never sanitize by stripping characters and continuing silently.
 7. For any other material generation ambiguity, ask the user for clarification instead of guessing.
 
 ---
@@ -400,23 +400,27 @@ The result is standard JSON formatting with the comma at the END of each propert
 
 ### Step 3.2 — Clean up temp files
 
-After successful assembly, delete temp files using the terminal with shell-native commands (do not assume PowerShell). Use retry logic to handle transient file locks.
+Delete the `*.entity.tmp` and `_header.assembly.tmp` files (and the now-empty `entities/` directory) under `ai-output/{fileName}/entities/`.
+
+**Prefer your file-editing tool's native delete/remove capability over the terminal for this step.** Removing temp files is a plain file-system operation — it does not need a shell, and avoiding the shell entirely removes the command-injection surface described below. Only fall back to the terminal commands if your runtime's edit tool cannot delete files or directories.
+
+If you must use the terminal, use shell-native commands (do not assume PowerShell) with retry logic to handle transient file locks. `{fileName}` MUST already have been validated against the `^[A-Za-z0-9._-]+$` allowlist (see Security and Reliability Guardrails). Every expansion of `{fileName}` below is quoted — never remove the quotes, even though the value is pre-validated, so the commands stay safe if that invariant is ever broken.
 
 ```
 POSIX shell example:
 for i in 1 2 3; do
   [ -d "ai-output/{fileName}/entities" ] || break
-  rm -f ai-output/{fileName}/entities/*.entity.tmp ai-output/{fileName}/entities/_header.assembly.tmp
-  rmdir ai-output/{fileName}/entities 2>/dev/null || true
+  rm -f "ai-output/{fileName}/entities/"*.entity.tmp "ai-output/{fileName}/entities/_header.assembly.tmp"
+  rmdir "ai-output/{fileName}/entities" 2>/dev/null || true
   sleep 1
 done
 
 Windows cmd.exe example:
 for /L %%i in (1,1,3) do (
-  if exist ai-output\{fileName}\entities (
-    del /Q ai-output\{fileName}\entities\*.entity.tmp 2>nul
-    del /Q ai-output\{fileName}\entities\_header.assembly.tmp 2>nul
-    rmdir ai-output\{fileName}\entities 2>nul
+  if exist "ai-output\{fileName}\entities" (
+    del /Q "ai-output\{fileName}\entities\*.entity.tmp" 2>nul
+    del /Q "ai-output\{fileName}\entities\_header.assembly.tmp" 2>nul
+    rmdir "ai-output\{fileName}\entities" 2>nul
   ) else (
     goto :cleanup_done
   )
@@ -424,19 +428,21 @@ for /L %%i in (1,1,3) do (
 :cleanup_done
 ```
 
-After running cleanup, verify no temp artifacts remain:
+After running cleanup, verify no temp artifacts remain. If you deleted via the file-editing tool, verify with a plain read/search for `ai-output/{fileName}/entities/` instead of the shell. If you used the terminal fallback, verify with the same shell:
 
 ```
 POSIX shell:
-if [ -d "ai-output/{fileName}/entities" ] && find ai-output/{fileName}/entities -maxdepth 1 -type f \( -name "*.entity.tmp" -o -name "_header.assembly.tmp" \) | grep -q .; then
+if [ -d "ai-output/{fileName}/entities" ] && find "ai-output/{fileName}/entities" -maxdepth 1 -type f \( -name "*.entity.tmp" -o -name "_header.assembly.tmp" \) | grep -q .; then
   echo "Temporary assembly files remain in ai-output/{fileName}/entities" >&2
   exit 1
 fi
 
 Windows cmd.exe:
-dir /B ai-output\{fileName}\entities\*.entity.tmp ai-output\{fileName}\entities\_header.assembly.tmp 2>nul | findstr . >nul && (
-  echo Temporary assembly files remain in ai-output\{fileName}\entities 1>&2
-  exit /b 1
+if exist "ai-output\{fileName}\entities" (
+  dir /B "ai-output\{fileName}\entities\*.entity.tmp" "ai-output\{fileName}\entities\_header.assembly.tmp" 2>nul | findstr . >nul && (
+    echo Temporary assembly files remain in ai-output\{fileName}\entities 1>&2
+    exit /b 1
+  )
 )
 ```
 

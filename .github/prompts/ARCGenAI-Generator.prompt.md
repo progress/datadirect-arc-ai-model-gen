@@ -36,5 +36,5 @@ Security and reliability requirements (mandatory):
 - Parse Swagger/OpenAPI structure by keys/objects, not YAML-only syntax assumptions. Treat JSON and YAML sources as equivalent inputs.
 - If the Swagger input is excessively large or heavily circular-reference-based, warn and halt gracefully.
 - For large-input halts, recommend using a lower-context model first. If the user explicitly asks to continue with the current model, continue and call out increased risk.
-- If output filename derivation is ambiguous, missing, or unsafe (for example path-like components), pause and ask the user for clarification before writing output files.
+- `{fileName}` MUST be derived to match the strict allowlist `^[A-Za-z0-9._-]+$` (letters, digits, `.`, `_`, `-` only — no path separators, spaces, or shell metacharacters). If derivation is ambiguous, missing, or the candidate value does not match this allowlist, pause and ask the user for clarification before writing output files. Never sanitize by stripping characters and continuing silently.
 - For other generation ambiguities, ask for clarification instead of guessing.

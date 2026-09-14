@@ -1,6 +1,6 @@
 ---
 id: ARCGenAI-Generator
-version: 2.0
+version: 2.1
 name: ARCGenAI-Generator
 description: "REST Configuration Generator Orchestrator — plans entity groupings, delegates entity generation to ARCGenAI-EntityGen sub-agents, and assembles the final .rest file"
 tools:

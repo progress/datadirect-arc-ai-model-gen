@@ -36,7 +36,7 @@ Your context is intentionally minimal. You read only what you need for this one 
 
 ## Security Guardrail
 
-Both `{fileName}` (received from the orchestrator) and `{entity-name}` (your invocation input, derived from an untrusted Swagger schema name) MUST match the strict allowlist `^[A-Za-z0-9._-]+$` before you write to `ai-output/{fileName}/entities/{entity-name}.entity.tmp`. If either value does not match, stop and report the invalid value instead of writing the file.
+Both `{fileName}` (received from the orchestrator) and `{entity-name}` (your invocation input, derived from an untrusted Swagger schema name) MUST match the strict allowlist `^[A-Za-z0-9._-]+$` AND MUST NOT be exactly `.` or `..` (these are valid matches for the character class but are reserved path-traversal tokens that would escape the intended `ai-output/{fileName}/entities/` directory) AND MUST NOT end with a trailing `.` (Win32 silently strips trailing dots from path components, so `foo.` would alias the same location as `foo`) AND MUST NOT be a Windows reserved device basename, case-insensitively, ignoring any extension (`CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` — e.g. `{entity-name}=CON` produces `CON.entity.tmp`, which Win32 still treats as the `CON` device) before you write to `ai-output/{fileName}/entities/{entity-name}.entity.tmp`. If either value does not match, is exactly `.` or `..`, ends with a trailing `.`, or is a reserved device basename, stop and report the invalid value instead of writing the file.
 
 ---
 

@@ -65,7 +65,7 @@ You do NOT load `rest-reference-template.rest`. You do NOT load `global-lang-spe
 3. Use Swagger/OpenAPI content only as API metadata to map structure, paths, parameters, and schema semantics.
 4. If the input appears excessively large or circular-reference-heavy, warn the user and halt gracefully.
 5. For large-input halts, recommend retrying with a lower-context model first. If the user explicitly asks to continue with the current model, continue and clearly note the elevated risk of incomplete or unstable output.
-6. `{fileName}` MUST be derived to match the strict allowlist `^[A-Za-z0-9._-]+$` (letters, digits, `.`, `_`, `-` only — no path separators, spaces, or shell metacharacters). If derivation is ambiguous, missing, or the candidate value does not match this allowlist, pause and ask the user for clarification before writing files. Never sanitize by stripping characters and continuing silently.
+6. `{fileName}` MUST be derived to match the strict allowlist `^[A-Za-z0-9._-]+$` (letters, digits, `.`, `_`, `-` only — no path separators, spaces, or shell metacharacters) AND MUST NOT be exactly `.` or `..` (these are valid matches for the character class but are reserved path-traversal tokens that would escape the intended `ai-output/{fileName}/` directory) AND MUST NOT end with a trailing `.` (Win32 silently strips trailing dots from path components, so `foo.` would alias the same directory as `foo`) AND MUST NOT be a Windows reserved device basename, case-insensitively, ignoring any extension (`CON`, `PRN`, `AUX`, `NUL`, `COM1`-`COM9`, `LPT1`-`LPT9` — these are reserved regardless of any suffix appended). If derivation is ambiguous, missing, the candidate value does not match this allowlist, is exactly `.` or `..`, ends with a trailing `.`, or is a reserved device basename, pause and ask the user for clarification before writing files. Never sanitize by stripping characters and continuing silently.
 7. For any other material generation ambiguity, ask the user for clarification instead of guessing.
 
 ---
@@ -404,7 +404,7 @@ Delete the `*.entity.tmp` and `_header.assembly.tmp` files (and the now-empty `e
 
 **Prefer your file-editing tool's native delete/remove capability over the terminal for this step.** Removing temp files is a plain file-system operation — it does not need a shell, and avoiding the shell entirely removes the command-injection surface described below. Only fall back to the terminal commands if your runtime's edit tool cannot delete files or directories.
 
-If you must use the terminal, use shell-native commands (do not assume PowerShell) with retry logic to handle transient file locks. `{fileName}` MUST already have been validated against the `^[A-Za-z0-9._-]+$` allowlist (see Security and Reliability Guardrails). Every expansion of `{fileName}` below is quoted — never remove the quotes, even though the value is pre-validated, so the commands stay safe if that invariant is ever broken.
+If you must use the terminal, use shell-native commands (do not assume PowerShell) with retry logic to handle transient file locks. `{fileName}` MUST already have been validated against the `^[A-Za-z0-9._-]+$` allowlist and confirmed not to be exactly `.` or `..` (see Security and Reliability Guardrails) — if that validation has not happened, STOP and do not run any of the commands below. Every expansion of `{fileName}` below is quoted as defense-in-depth against word-splitting and separator characters, but quoting is NOT a substitute for validation: POSIX double quotes still allow `$(...)`/backtick command substitution, and `cmd.exe` still expands `%VAR%` inside double quotes. If the `{fileName}` validation invariant is ever broken, quoting alone does not make these commands safe.
 
 ```
 POSIX shell example:
@@ -440,7 +440,7 @@ fi
 Windows cmd.exe:
 if exist "ai-output\{fileName}\entities" (
   dir /B "ai-output\{fileName}\entities\*.entity.tmp" "ai-output\{fileName}\entities\_header.assembly.tmp" 2>nul | findstr . >nul && (
-    echo Temporary assembly files remain in ai-output\{fileName}\entities 1>&2
+    echo Temporary assembly files remain in "ai-output\{fileName}\entities" 1>&2
     exit /b 1
   )
 )

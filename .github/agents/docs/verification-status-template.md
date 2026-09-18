@@ -1,7 +1,5 @@
 # Verification Status Template
 
-> **Version:** 1.0
-
 Use this template for:
 `ai-output/<basename>/<basename>-validation-status.md`
 

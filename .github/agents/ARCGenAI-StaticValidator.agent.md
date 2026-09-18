@@ -1,6 +1,5 @@
 ---
 id: ARCGenAI-StaticValidator
-version: 1.0
 name: ARCGenAI-StaticValidator
 description: "Deterministic static verifier for AutoREST .rest files against swagger and language rules"
 inputs:

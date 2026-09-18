@@ -1,6 +1,5 @@
 ---
 agent: ARCGenAI-StaticValidator
-version: "1.0"
 description: "Deterministic static verification of a .rest file against swagger and spec"
 ---
 

@@ -1,6 +1,5 @@
 ---
 agent: ARCGenAI-Launcher
-version: "1.0"
 description: "Open a validated .rest file in ARC Composer (AutoREST JAR design mode)"
 ---
 

@@ -1,6 +1,5 @@
 ---
 id: ARCGenAI-EntityGen
-version: 1.1
 name: ARCGenAI-EntityGen
 description: "Single-entity REST block generator — generates exactly one entity block and writes it to a temp file for orchestrator assembly"
 tools:

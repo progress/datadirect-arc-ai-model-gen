@@ -1,6 +1,5 @@
 ---
 title: "Global REST Language Specification"
-version: "1.0"
 ---
 
 # Global REST Language Specification
@@ -1380,5 +1379,5 @@ When the following are encountered, the Generator Agent MUST emit a best-guess v
 
 ---
 
-*End of Global REST Language Specification v1.0*
+*End of Global REST Language Specification*
 *Updated: 2026-04-09| Sources: 40+ API models, REST Syntax Wiki Documentation, Source Code Analysis*

@@ -1,6 +1,5 @@
 ---
 id: ARCGenAI-Launcher
-version: 1.0
 name: ARCGenAI-Launcher
 description: "Opens a validated .rest file in ARC Composer by launching the AutoREST JAR in design mode"
 tools:

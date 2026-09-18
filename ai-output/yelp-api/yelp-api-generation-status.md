@@ -162,7 +162,6 @@ assumptions:
 | --- | --- |
 | Swagger source | yelp-api.yaml |
 | Generation timestamp | 2026-05-26 |
-| Generator agent version | ARCGenAI-Generator 1.0 |
 | Total swagger endpoints | 16 |
 | Total endpoints modeled | 15 |
 | Total entities generated | 8 |

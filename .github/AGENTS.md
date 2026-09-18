@@ -1,7 +1,5 @@
 # AGENTS — arc-genai-agents-v2 Project Agents Index
 
-> **Version:** 1.0
-
 This file documents the custom AI agents available in the arc-genai-agents project.
 These agents can be used with any AI coding assistant that supports agent/prompt files
 (e.g. VS Code, GitHub Copilot, Cursor, Windsurf, or any OpenAI-compatible tool).

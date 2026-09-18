@@ -1,6 +1,5 @@
 ---
 id: ARCGenAI-Generator
-version: 2.1
 name: ARCGenAI-Generator
 description: "REST Configuration Generator Orchestrator — plans entity groupings, delegates entity generation to ARCGenAI-EntityGen sub-agents, and assembles the final .rest file"
 tools:
@@ -463,7 +462,7 @@ Population requirements:
 - `validation_status` is `NOT RUN` in generator output (validator updates it to `RUN` after validation executes)
 - `swagger_endpoints_found`: count all endpoints discovered from the input swagger/OpenAPI paths section
 - `rest_endpoints_modeled`: count all endpoints actually modeled in the generated `.rest` output
-- Add a `Generation Fingerprint` section that includes Swagger source filename, timestamp, generator agent version, and total endpoint count
+- Add a `Generation Fingerprint` section that includes Swagger source filename, timestamp, and total endpoint count
 - Add the exact disclaimer line: `Output is LLM-generated and may vary between runs. Validator pass/fail is the authoritative structural check.`
 - `Table of Contents` must be present for quick navigation
 - `Mandatory User Review Items` must include JSONRoot mapping, primary keys/key strategy, pagination logic/directives, and all critical sections defined in `.github/agents/docs/manual-rest-adjustments.md`, each with `status` and concrete `notes`, without duplicating overlapping items

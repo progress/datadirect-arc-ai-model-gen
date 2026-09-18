@@ -1,7 +1,5 @@
 # Generation Status Template
 
-> **Version:** 1.0
-
 Use this template for `ai-output/{fileName}/{fileName}-generation-status.md` on every generator run.
 
 ```yaml
@@ -152,6 +150,5 @@ Use this checklist to move from generated output to a validated `.rest` file.
 ```yaml
 swagger_source_filename: {swagger_source_filename}
 generated_timestamp: {timestamp_iso8601}
-generator_agent_version: {generator_agent_version}
 total_endpoint_count: {swagger_endpoint_count}
 ```

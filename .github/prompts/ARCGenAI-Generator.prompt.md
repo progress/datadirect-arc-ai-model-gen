@@ -1,6 +1,5 @@
 ---
 agent: ARCGenAI-Generator
-version: "1.1"
 description: "Generate AutoREST .rest from provided Swagger/OpenAPI input"
 ---
 

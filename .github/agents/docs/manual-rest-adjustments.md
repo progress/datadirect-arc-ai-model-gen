@@ -1,7 +1,6 @@
 ---
 title: "Manual REST Configuration Updates"
 generated_on: "2026-03-30T00:00:00Z"
-version: "1.0"
 updated_on: "2026-04-14T00:00:00Z"
 ---
 

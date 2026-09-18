@@ -1,5 +1,4 @@
 // rest-reference-template.rest — AutoREST Generator Reference Template
-// version: 1.0
 // Demonstrates every directive, field type, modifier, and virtual pattern the generator can produce.
 // Generated output MUST NOT contain comments (R-SX-004).
 // Entities: documents, users, reports, categories, audit_logs, listings, ai_chat, listing_reviews

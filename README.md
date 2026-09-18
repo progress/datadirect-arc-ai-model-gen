@@ -1,7 +1,5 @@
 # ARC GenAI Agents
 
-> **Version:** 1.0
-
 ---
 
 ## Table of Contents
@@ -183,7 +181,7 @@ These guardrails are especially relevant when processing third-party or external
 ## Supported input
 
 - **Supported:** Swagger/OpenAPI documents (`.json`, `.yaml`, `.yml`)
-- **Out of scope for version 1.0:** PDF API documentation as generation input
+- **Out of scope:** PDF API documentation as generation input
 
 ---
 
@@ -215,7 +213,7 @@ Before using the generated `.rest`, review:
 
 - `ai-output/{name}/{name}-generation-status.md` for gaps, exclusions, and mandatory review items
 - `.github/agents/docs/manual-rest-adjustments.md` for cases that are ambiguous or not fully derivable from Swagger/OpenAPI documents (for example: root mapping nuances, key decisions, paging details)
-- The status file fingerprint (source filename, timestamp, agent version, endpoint count) and the `MANDATORY REVIEW BEFORE USE` section before promoting output
+- The status file fingerprint (source filename, timestamp, endpoint count) and the `MANDATORY REVIEW BEFORE USE` section before promoting output
 
 ### 3. Validate generated output
 
